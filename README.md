@@ -6,9 +6,18 @@
 - Handle authentication
 - Download models and extract them
 
-
-
-# Usage
+# Simple example
+To start a simple search, a SketchFetch object is created. An optional result type is returned. You can iterate over the results. 
+``` c++
+ SketchFetch fetcher{};
+ if(auto results = fetcher.search({.q = "Bunny"})){
+    for(auto &res: *results){
+        fmt::print("{}\n",res);     //Print the whole result object
+        fmt::print("{}\n",res.name) //Print only the name
+    }
+ }
+```
+More detailed examples are in the  [PROGRAMMING](PROGRAMMING.md) document.
 
 
 # Building and installing

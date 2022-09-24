@@ -4,7 +4,31 @@
 
 This Project uses vcpkg for dependency managment. Find the install instructions at:
 [vcpkg Getting started](https://vcpkg.io/en/getting-started.html)
+
+
+This project uses:
+- [fmt](https://github.com/fmtlib/fmt) to build the search queries
+- [nlohmann json](https://github.com/nlohmann/json) to parse the api results
+- [restclient-cpp](https://github.com/mrtazz/restclient-cpp) to make requests to the Sketchfab API
+- [libzippp](https://github.com/ctabin/libzippp) to unzip the downloadd archives from Sketchfab
+
 For a list of dependencies, please refer to [vcpkg.json](vcpkg.json).
+
+You need to install these dependencies with **vcpkg** and add the vcpkg toolchain file to cmake.
+### Add this to your cmake args
+```sh
+ -DCMAKE_TOOLCHAIN_FILE={path_to}vcpkg/scripts/buildsystems/vcpkg.cmake
+```
+### Install the dependencies (on windows)
+**vcpkg**
+```sh
+.\vcpkg.exe install fmt:x64-windows
+.\vcpkg.exe install nlohmann-json:x64-windows
+.\vcpkg.exe install restclient-cpp:x64-windows
+.\vcpkg.exe install curl:x64-windows
+```
+**vcpkg** defaults to install libraries as x86, make sure to add x64-windows if your project targets x64
+
 
 ## Build
 
@@ -80,6 +104,18 @@ target_link_libraries(
     project_target PRIVATE
     SketchFetch::SketchFetch
 )
+```
+
+You can also use FetchContent to add SketchFetch to your Project:
+
+```cmake
+include(FetchContent)
+FetchContent_Declare(
+  SketchFetch
+  GIT_REPOSITORY git@github.com:SpiRelli90/SketchFetch.git
+  GIT_TAG Main
+)
+FetchContent_MakeAvailable(SketchFetch)
 ```
 
 [1]: https://cmake.org/download/
