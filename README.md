@@ -1,19 +1,20 @@
-# SketchFetch
+# `SketchFetch` - a C++ Sketchfab Wrapper
+![Sketchfab](https://static.sketchfab.com/img/press/logos/sketchfab-logo-text-white-mono.png)
 
-This is the SketchFetch project.
+`SketchFetch` is a C++ Wrapper for Sketchfab. It can: 
+- Search for models using every Parameter provided by Sketchfab
+- Handle authentication
+- Download models and extract them
+
+
+
+# Usage
+
 
 # Building and installing
 
 See the [BUILDING](BUILDING.md) document.
 
-# Contributing
-
-See the [CONTRIBUTING](CONTRIBUTING.md) document.
-
 # Licensing
 
-<!--
-Please go to https://choosealicense.com/licenses/ and choose a license that
-fits your needs. The recommended license for a project of this type is the
-Boost Software License 1.0.
--->
+SketchFetch uses the MIT License ![GitHub](https://img.shields.io/github/license/SpiRelli90/SketchFetch?style=flat-square)
