@@ -22,6 +22,7 @@ public:
 
   [[nodiscard]] auto getAccessToken() const -> std::string_view;
   auto authenticate(std::string_view, std::string_view) -> void;
+  auto authenticate() -> void;
   auto getAuthenticated() const -> bool;
 
 private:
@@ -37,7 +38,6 @@ private:
   auto loadToken() -> bool;
 
   auto sendAndParse(std::string const&) -> void;
-  auto authenticate() -> void;
 };
 
 /**

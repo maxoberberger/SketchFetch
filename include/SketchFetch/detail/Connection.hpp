@@ -44,6 +44,7 @@ public:
 
   auto setAccess(std::string_view, std::string_view) -> void;
   auto getAuthenticated() -> bool;
+  auto authenticate() -> bool;
 };
 
 Connection::Connection(std::string_view username_, std::string_view password_)
@@ -152,6 +153,12 @@ inline auto Connection::setAccess(std::string_view username_,
                                   std::string_view password_) -> void
 {
   auth.authenticate(username_, password_);
+}
+
+inline auto Connection::authenticate() -> bool
+{
+  auth.authenticate();
+  return auth.getAuthenticated();
 }
 
 inline auto Connection::getAuthenticated() -> bool

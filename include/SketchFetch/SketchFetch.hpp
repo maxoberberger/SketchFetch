@@ -30,6 +30,7 @@ public:
   SketchFetch(std::string_view, std::string_view, SketchFlag);
 
   auto setAccess(std::string_view, std::string_view) -> void;
+  auto authenticate() -> bool;
   auto getAuthenticated() -> bool;
   auto setThumbnailFolder(std::filesystem::path const&, bool) -> void;
   auto setModelFolder(std::filesystem::path const&, bool) -> void;
@@ -165,6 +166,11 @@ inline auto SketchFetch::setAccess(std::string_view username_,
   conn.setAccess(username_, password_);
 }
 
+inline auto SketchFetch::authenticate() -> bool
+{
+  return conn.getAuthenticated();
+}
+
 inline auto SketchFetch::getAuthenticated() -> bool
 {
   return conn.getAuthenticated();
@@ -228,9 +234,9 @@ auto SketchFetch::downloadModel(ModelSearchResult const& result) const -> void
     file_name /= result.uid;
     file_name += ".zip";
     storeToDisk(*data, file_name);
-    std::ofstream os {folder / "name.txt", std::ios::binary};
-    os.write(result.name.c_str(), result.name.size());
-    os.close();
+    std::ofstream namefile {folder / "name.txt", std::ios::binary};
+    namefile.write(result.name.c_str(), result.name.size());
+    namefile.close();
     auto zip = libzippp::ZipArchive(file_name.string());
     zip.open(libzippp::ZipArchive::ReadOnly);
     for (auto&& entry : zip.getEntries()) {
