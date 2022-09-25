@@ -43,18 +43,54 @@ bool authenticated = fetcher.getAuthenticated();
 ```
 ## Search
 `SketchFetch` uses an **ModelSearchQuery** object to describe the search requests. Every argument is optional but you have to declare them in the given order. Refer to [ModelSearch][2] for the available options and there order. Find more information about the search queries in the Sketchfab API [documentation][3].
-
+Build a ModelSearchQuery object and pass it to the **search()** member function.
+```c++
+ModelSearchQuery query{.q=bunny,.downloadable=true};
+fetcher.search(query);  //Or:
+fetcher.search({.q=bunny,.downloadable=true});
+```
 ### Search Results
-
+There are two possible return types for search, both are wrapped in an optional if there are no results. 
 #### SketchFetch Object
-
+- The results are returned in a vector of **ModelSearchResult**. To get a **ModelSearchResult** call **.search()**, it parses the Sketchfab API return values and stores them in an object. It contains the *uri*,*uid*,*name*,*description*,the first *thumbnail* url, the number of likes and views and if its available for download.
 #### Json Object
+- The results are return as a **nlohmann::json**. Call **.searchJSON()** to get the JSON return value. Refer to the Sketchfab [API][2] to learn the content of the returned JSON.
 
 ## Download
 
+There are a few ways to download data from Sketchfab using this library. You can eiher let the library handle the file access and extraction of the downloaded zip file, or get a vector containing the data. The vector has the type if **std::vector<uint8_t>**. The download and extract function begin with *download...* the other ones begin with *get...*.
+You can either pass a valid *url* from Sketchfab or a **ModelSearchResult** to the download functions.
+
 ### Models
+To download a model use the **downloadModel(ModelSearchResult const&)** function.
+```c++
+if(auto result =fetcher.search({.q=bunny,.downloadable=true}))
+    fetcher.downloadModel((*result)[0]);
+```
+This downloads the first result for the search query "bunny" in your model folder. 
+If you want to handle the file access yourself or want to use the data directly use **.getModel(ModelSearchResult const&)**
+```c++
+if(auto result =fetcher.search({.q=bunny,.downloadable=true}))
+    auto data_vector fetcher.getModel((*result)[0]);
+```
+But be aware that the returned data from Sketchfab is zipped. You have to unzip the data_vector to use it.
 
 ### Thumbnails
+
+To download a thumbnail use either **.downloadThumbnail(ModelSearchResult const&)** or **.downloadThumbnail(str::string_view url,std::string_view name)**
+```c++
+if(auto result =fetcher.search({.q=bunny,.downloadable=true}))
+    fetcher.downloadThumbnail((*result)[0]);    //or
+    fetcher.downloadThumbnail((*result)[0].thumbnail,"thumby");
+```
+This downloads the thumbnail of the first result for the search query "bunny" in your thumbnail folder folder. 
+If you want to handle the file access yourself or want to use the data directly use **.getThumbnail(ModelSearchResult const&)** or **.getThumbnail(str::string_view url,std::string_view name)**
+```c++
+if(auto result =fetcher.search({.q=bunny,.downloadable=true}))
+    auto data_vector fetcher.getThumbnail((*result)[0]); //or
+    auto data_vector fetcher.getThumbnail((*result)[0].thumbnail,"thumby");
+```
+
 
 [1]: https://sketchfab.com/signup
 [2]: include/SketchFetch/detail/ModelSearch.hpp

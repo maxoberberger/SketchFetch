@@ -45,13 +45,15 @@ public:
   [[nodiscard]] auto searchJSON(ModelSearchQuery const&) const
       -> std::optional<json>;
 
-  auto getThumbnails(ModelSearchResult const&) const
-      -> std::unordered_map<std::string, download_t>;
+  // auto getThumbnails(ModelSearchResult const&) const
+  //     -> std::unordered_map<std::string, download_t>;
+
   auto getThumbnail(ModelSearchResult const&) const
       -> std::optional<download_t>;
-
   auto downloadThumbnail(ModelSearchResult const&) const -> void;
-  auto downloadThumbnails(ModelSearchResult const&) const -> void;
+
+  auto getThumbnail(std::string_view) const -> std::optional<download_t>;
+  auto downloadThumbnail(std::string_view, std::string_view) const -> void;
 
   [[nodiscard]] auto getModel(ModelSearchResult const&) const
       -> std::optional<download_t>;
@@ -93,8 +95,23 @@ inline SketchFetch::SketchFetch(
   setThumbnailFolder(thumbnail_folder, create == SketchFlag::CreateFolder);
 }
 
+inline auto SketchFetch::getThumbnail(std::string_view url) const
+    -> std::optional<download_t>
+{
+  return conn.download(url);
+}
+inline auto SketchFetch::downloadThumbnail(std::string_view url,
+                                           std::string_view name) const -> void
+{
+  auto thumbnail = getThumbnail(url);
+  auto file_name = thumbnail_folder;
+  file_name /= name;
+  file_name += ".jpg";
+  storeToDisk(*thumbnail, file_name);
+}
+
 inline auto SketchFetch::getThumbnail(ModelSearchResult const& result) const
-    -> std::optional<std::vector<uint8_t>>
+    -> std::optional<download_t>
 {
   return conn.download(result.thumbnail);
 }
