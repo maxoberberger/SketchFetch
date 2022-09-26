@@ -26,4 +26,4 @@ See the [BUILDING](BUILDING.md) document.
 
 # Licensing
 
-SketchFetch uses the MIT License ![GitHub](https://img.shields.io/github/license/SpiRelli90/SketchFetch?style=flat-square)
+SketchFetch uses the MIT License ![GitHub](https://img.shields.io/github/license/SpiRelli90/SketchFetch)
