@@ -19,29 +19,80 @@
 using json = nlohmann::json;
 namespace SketchFetch
 {
-
+/**
+ * @brief Handles Connction to Sketchfab and provides get and download functions
+ *
+ *
+ */
 class Connection
 {
 private:
   Authentication::Auth auth;
+  using download_t = std::vector<uint8_t>;
 
 public:
+  /**
+   * @brief initialise rest client and authentication
+   */
   Connection(std::string_view username_, std::string_view password_);
-  Connection() = default;
+
+  /**
+   * @brief initialise rest client
+   */
+  Connection();
+  /**
+   * @brief closes the rest client
+   */
   ~Connection();
+
   Connection(const Connection&) = delete;
   Connection& operator=(const Connection&) = delete;
-
+  /**
+   * @brief makes a get request to the Sketchfab API and parses the response as json
+   */
   auto get(const std::string& query_) const -> std::optional<json>;
-  auto download(std::string_view url) const -> std::optional<std::vector<uint8_t>>;
-  auto getModelDownloadURI(std::string_view model_uid) const -> std::variant<std::string, int>;
-  auto downloadModel(std::string_view model_url) const -> std::optional<std::vector<uint8_t>>;
-  auto downloadThumbnails(std::span<std::string> urls) const -> std::optional<std::vector<std::vector<uint8_t>>>;
 
+  /**
+   * @brief downloads data at url
+   * @return optional download_t
+   */
+  auto download(std::string_view url) const -> std::optional<download_t>;
+
+  /**
+   * @brief request download uri for models
+   * @return error code or download uri
+   */
+  auto getModelDownloadURI(std::string_view model_uid) const -> std::variant<std::string, int>;
+
+  /**
+   * @brief download model and stores it in vector
+   * @return optional download_t
+   */
+  auto downloadModel(std::string_view model_url) const -> std::optional<download_t>;
+  auto downloadThumbnails(std::span<std::string> urls) const -> std::optional<std::vector<download_t>>;
+
+  /**
+   * @brief Tries to get an access token using username and password
+   * @details Uses an already stored token in the sketchfab.auth file.
+   * @exception throws on error
+   */
   auto setAccess(std::string_view, std::string_view) -> void;
-  auto getAuthenticated() -> bool;
+  /**
+   * @brief Like setAccess but only uses auth file
+   * @exception throws on error
+   */
   auto authenticate() -> bool;
+
+  /**
+   * @brief get authentication status
+   */
+  auto getAuthenticated() -> bool;
 };
+
+Connection::Connection()
+{
+  RestClient::init();
+}
 
 Connection::Connection(std::string_view username_, std::string_view password_)
     : auth(username_, password_)
@@ -78,13 +129,13 @@ inline auto Connection::get(const std::string& query) const -> std::optional<jso
   return std::nullopt;
 }
 
-auto Connection::download(std::string_view url) const -> std::optional<std::vector<uint8_t>>
+auto Connection::download(std::string_view url) const -> std::optional<download_t>
 {
   Util::Timer t;
   RestClient::Connection conn {url.data()};
   auto r = conn.get("");
   if (r.code == 200) {
-    return std::vector<uint8_t>(r.body.begin(), r.body.end());
+    return download_t(r.body.begin(), r.body.end());
   } else {
     fmt::print(fg(fmt::color::red), "ERROR Response Code: {}\n", r.code);
   }
@@ -112,16 +163,15 @@ auto Connection::getModelDownloadURI(std::string_view model_uid) const -> std::v
   return ret;
 }
 
-auto Connection::downloadModel(std::string_view model_url) const -> std::optional<std::vector<uint8_t>>
+auto Connection::downloadModel(std::string_view model_url) const -> std::optional<download_t>
 {
   return download(model_url);
 }
 
-auto Connection::downloadThumbnails(std::span<std::string> urls) const
-    -> std::optional<std::vector<std::vector<uint8_t>>>
+auto Connection::downloadThumbnails(std::span<std::string> urls) const -> std::optional<std::vector<download_t>>
 {
-  std::vector<std::future<std::optional<std::vector<uint8_t>>>> futures;
-  std::vector<std::vector<uint8_t>> results;
+  std::vector<std::future<std::optional<download_t>>> futures;
+  std::vector<download_t> results;
   for (auto&& url : urls) {
     futures.push_back(std::async(std::launch::async, [this, url]() { return download(url); }));
   }
