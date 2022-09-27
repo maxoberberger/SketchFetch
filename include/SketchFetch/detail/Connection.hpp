@@ -33,14 +33,10 @@ public:
   Connection& operator=(const Connection&) = delete;
 
   auto get(const std::string& query_) const -> std::optional<json>;
-  auto download(std::string_view url) const
-      -> std::optional<std::vector<uint8_t>>;
-  auto getModelDownloadURI(std::string_view model_uid) const
-      -> std::variant<std::string, int>;
-  auto downloadModel(std::string_view model_url) const
-      -> std::optional<std::vector<uint8_t>>;
-  auto downloadThumbnails(std::span<std::string> urls) const
-      -> std::optional<std::vector<std::vector<uint8_t>>>;
+  auto download(std::string_view url) const -> std::optional<std::vector<uint8_t>>;
+  auto getModelDownloadURI(std::string_view model_uid) const -> std::variant<std::string, int>;
+  auto downloadModel(std::string_view model_url) const -> std::optional<std::vector<uint8_t>>;
+  auto downloadThumbnails(std::span<std::string> urls) const -> std::optional<std::vector<std::vector<uint8_t>>>;
 
   auto setAccess(std::string_view, std::string_view) -> void;
   auto getAuthenticated() -> bool;
@@ -58,8 +54,7 @@ Connection::~Connection()
   RestClient::disable();
 }
 
-inline auto Connection::get(const std::string& query) const
-    -> std::optional<json>
+inline auto Connection::get(const std::string& query) const -> std::optional<json>
 {
   Util::Timer t;
   RestClient::Connection conn {SketchFabAPI::api_endpoint.data()};
@@ -83,8 +78,7 @@ inline auto Connection::get(const std::string& query) const
   return std::nullopt;
 }
 
-auto Connection::download(std::string_view url) const
-    -> std::optional<std::vector<uint8_t>>
+auto Connection::download(std::string_view url) const -> std::optional<std::vector<uint8_t>>
 {
   Util::Timer t;
   RestClient::Connection conn {url.data()};
@@ -97,8 +91,7 @@ auto Connection::download(std::string_view url) const
   return std::nullopt;
 }
 
-auto Connection::getModelDownloadURI(std::string_view model_uid) const
-    -> std::variant<std::string, int>
+auto Connection::getModelDownloadURI(std::string_view model_uid) const -> std::variant<std::string, int>
 {
   std::variant<std::string, int> ret;
   RestClient::HeaderFields header {};
@@ -119,8 +112,7 @@ auto Connection::getModelDownloadURI(std::string_view model_uid) const
   return ret;
 }
 
-auto Connection::downloadModel(std::string_view model_url) const
-    -> std::optional<std::vector<uint8_t>>
+auto Connection::downloadModel(std::string_view model_url) const -> std::optional<std::vector<uint8_t>>
 {
   return download(model_url);
 }
@@ -131,8 +123,7 @@ auto Connection::downloadThumbnails(std::span<std::string> urls) const
   std::vector<std::future<std::optional<std::vector<uint8_t>>>> futures;
   std::vector<std::vector<uint8_t>> results;
   for (auto&& url : urls) {
-    futures.push_back(std::async(std::launch::async,
-                                 [this, url]() { return download(url); }));
+    futures.push_back(std::async(std::launch::async, [this, url]() { return download(url); }));
   }
   for (auto&& f : futures) {
     try {
@@ -145,12 +136,10 @@ auto Connection::downloadThumbnails(std::span<std::string> urls) const
       fmt::print(fg(fmt::color::red), "ERROR Future Get: {}\n", e.what());
     }
   }
-  return results.empty() ? std::nullopt
-                         : std::make_optional(std::move(results));
+  return results.empty() ? std::nullopt : std::make_optional(std::move(results));
 }
 
-inline auto Connection::setAccess(std::string_view username_,
-                                  std::string_view password_) -> void
+inline auto Connection::setAccess(std::string_view username_, std::string_view password_) -> void
 {
   auth.authenticate(username_, password_);
 }
