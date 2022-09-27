@@ -18,12 +18,21 @@ class Auth
 public:
   Auth() = default;
   Auth(std::string_view, std::string_view);
-  Auth(std::string_view, std::string_view, std::string_view);
 
-  [[nodiscard]] auto getAccessToken() const -> std::string_view;
+  /**
+   * @brief calls authenticate and set username and password
+   */
   auto authenticate(std::string_view, std::string_view) -> void;
+
+  /**
+   * @brief tries to authenticate on Sketchfab
+   * @details first tires to use a stored token if there is none it will aquire one\
+   *          it will refresh the token if it is expired
+   * @exception throws on error
+   */
   auto authenticate() -> void;
   auto getAuthenticated() const -> bool;
+  [[nodiscard]] auto getAccessToken() const -> std::string_view;
 
 private:
   std::string username, password, client_id;
@@ -52,28 +61,18 @@ inline Auth::Auth(std::string_view username_, std::string_view password_)
   authenticate();
 };
 
-inline Auth::Auth(std::string_view username_, std::string_view password_, std::string_view client_id_)
-    : Auth(username_, password_)
-{
-  client_id = Util::percentEncode(client_id_);
-}
-
 inline auto Auth::authenticate() -> void
 {
   using namespace std::chrono;
   const bool loaded = loadToken();
   if (loaded && time_point_cast<milliseconds>(system_clock::now()).time_since_epoch().count() < token_valid_until) {
-    // fmt::print("Load Token\n");
     authenticated = true;
     return;
   } else if (loaded) {
-    // fmt::print("Refresh Token\n");
     refreshToken();
   } else {
-    // fmt::print("Get Token\n");
     getToken();
   }
-  // fmt::print("Store Token\n");
   authenticated = true;
   storeToken();
 }
