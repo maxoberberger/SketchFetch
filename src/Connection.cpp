@@ -1,10 +1,4 @@
-#pragma once
-#include <fstream>
-#include <future>
-#include <optional>
-#include <span>
-#include <string>
-#include <variant>
+#include "Connection.h"
 
 #include <fmt/chrono.h>
 #include <fmt/color.h>
@@ -12,82 +6,13 @@
 #include <fmt/os.h>
 #include <nlohmann/json.hpp>
 
-#include "Authentication.hpp"
-#include "Util.hpp"
+#include "Authentication.h"
+#include "Util.h"
 #include "restclient-cpp/connection.h"
 #include "restclient-cpp/restclient.h"
-using json = nlohmann::json;
+
 namespace SketchFetch
 {
-/**
- * @brief Handles Connction to Sketchfab and provides get and download functions
- *
- *
- */
-class Connection
-{
-private:
-  Authentication::Auth auth;
-  using download_t = std::vector<uint8_t>;
-
-public:
-  /**
-   * @brief initialise rest client and authentication
-   */
-  Connection(std::string_view username_, std::string_view password_);
-
-  /**
-   * @brief initialise rest client
-   */
-  Connection();
-  /**
-   * @brief closes the rest client
-   */
-  ~Connection();
-
-  Connection(const Connection&) = delete;
-  Connection& operator=(const Connection&) = delete;
-  /**
-   * @brief makes a get request to the Sketchfab API and parses the response as json
-   */
-  auto get(const std::string& query_) const -> std::optional<json>;
-
-  /**
-   * @brief downloads data at url
-   * @return optional download_t
-   */
-  auto download(std::string_view url) const -> std::optional<download_t>;
-
-  /**
-   * @brief request download uri for models
-   * @return error code or download uri
-   */
-  auto getModelDownloadURI(std::string_view model_uid) const -> std::variant<std::string, int>;
-
-  /**
-   * @brief download model and stores it in vector
-   * @return optional download_t
-   */
-  auto downloadModel(std::string_view model_url) const -> std::optional<download_t>;
-  auto downloadThumbnails(std::span<std::string> urls) const -> std::optional<std::vector<download_t>>;
-
-  /**
-   * @brief Tries to get an access token using username and password
-   * @details Uses an already stored token in the sketchfab.auth file.
-   * @exception throws on error
-   */
-  auto setAccess(std::string_view, std::string_view) -> void;
-  /**
-   * @brief Like setAccess but only uses auth file
-   * @exception throws on error
-   */
-  auto authenticate() -> bool;
-
-  /**
-   * @brief get authentication status
-   */
-  auto getAuthenticated() -> bool;
-};
 
 Connection::Connection()
 {
@@ -105,7 +30,7 @@ Connection::~Connection()
   RestClient::disable();
 }
 
-inline auto Connection::get(const std::string& query) const -> std::optional<json>
+auto Connection::get(const std::string& query) const -> std::optional<json>
 {
   Util::Timer t;
   RestClient::Connection conn {SketchFabAPI::api_endpoint.data()};
@@ -189,19 +114,20 @@ auto Connection::downloadThumbnails(std::span<std::string> urls) const -> std::o
   return results.empty() ? std::nullopt : std::make_optional(std::move(results));
 }
 
-inline auto Connection::setAccess(std::string_view username_, std::string_view password_) -> void
+auto Connection::setAccess(std::string_view username_, std::string_view password_) -> void
 {
   auth.authenticate(username_, password_);
 }
 
-inline auto Connection::authenticate() -> bool
+auto Connection::authenticate() -> bool
 {
   auth.authenticate();
   return auth.getAuthenticated();
 }
 
-inline auto Connection::getAuthenticated() -> bool
+auto Connection::getAuthenticated() -> bool
 {
   return auth.getAuthenticated();
 }
+
 }  // namespace SketchFetch

@@ -10,16 +10,12 @@ project(
   LANGUAGES CXX
   )
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
-
-
-
 include(cmake/project-is-top-level.cmake)
 include(cmake/variables.cmake)
 
 # ---- Declare library ----
 
-add_library(SketchFetch_SketchFetch INTERFACE)
+add_library(SketchFetch_SketchFetch SHARED)
 add_library(SketchFetch::SketchFetch ALIAS SketchFetch_SketchFetch)
 
 set_property(
@@ -27,13 +23,34 @@ set_property(
     EXPORT_NAME SketchFetch
 )
 
-target_include_directories(
-    SketchFetch_SketchFetch ${warning_guard}
-    INTERFACE
-    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
+target_sources(
+  SketchFetch_SketchFetch
+  PRIVATE
+
+  include/SketchFetch/SketchFetch.h
+  include/SketchFetch/detail/Authentication.h
+  include/SketchFetch/detail/Connection.h
+  include/SketchFetch/detail/Exception.h
+  include/SketchFetch/detail/ModelSearch.h
+  include/SketchFetch/detail/SketchFabAPI.h
+  include/SketchFetch/detail/Util.h
+
+  src/Authentication.cpp
+  src/Connection.cpp
+  src/ModelSearch.cpp
+  src/SketchFetch.cpp
 )
 
-target_compile_features(SketchFetch_SketchFetch INTERFACE cxx_std_20)
+target_include_directories(
+    SketchFetch_SketchFetch ${warning_guard}
+    PUBLIC
+    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
+    PRIVATE
+    include/SketchFetch
+    include/SketchFetch/detail
+)
+
+target_compile_definitions(SketchFetch_SketchFetch PRIVATE SKETCH_FETCH_EXPORT)
 
 find_package(CURL CONFIG REQUIRED)
 find_package(restclient-cpp CONFIG REQUIRED)
@@ -41,13 +58,13 @@ find_package(fmt CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(libzippp CONFIG REQUIRED)
 
-target_link_libraries(SketchFetch_SketchFetch INTERFACE
+target_link_libraries(SketchFetch_SketchFetch 
+ PRIVATE
  fmt::fmt
  nlohmann_json::nlohmann_json
  restclient-cpp
  libzippp::libzippp
-
- )
+)
 
 # ---- Install rules ----
 

@@ -1,59 +1,22 @@
-#pragma once
-#include <charconv>
-#include <fstream>
+#include "Authentication.h"
 
-#include "Exception.hpp"
-#include "SketchFabAPI.hpp"
-#include "Util.hpp"
+#include "Exception.h"
+#include "Util.h"
 #include "fmt/chrono.h"
 #include "fmt/color.h"
 #include "fmt/format.h"
 #include "fmt/os.h"
 #include "restclient-cpp/connection.h"
 #include "restclient-cpp/restclient.h"
+
 namespace SketchFetch::Authentication
 {
-class Auth
-{
-public:
-  Auth() = default;
-  Auth(std::string_view, std::string_view);
-
-  /**
-   * @brief calls authenticate and set username and password
-   */
-  auto authenticate(std::string_view, std::string_view) -> void;
-
-  /**
-   * @brief tries to authenticate on Sketchfab
-   * @details first tires to use a stored token if there is none it will aquire one\
-   *          it will refresh the token if it is expired
-   * @exception throws on error
-   */
-  auto authenticate() -> void;
-  auto getAuthenticated() const -> bool;
-  [[nodiscard]] auto getAccessToken() const -> std::string_view;
-
-private:
-  std::string username, password, client_id;
-  std::string access_token, refresh_token;
-  std::string auth_token {SketchFabAPI::auth_token};
-  long long token_valid_until;
-  bool authenticated {false};  // True if authentication was successful
-
-  auto getToken() -> void;
-  auto refreshToken() -> void;
-  auto storeToken() const -> void;
-  auto loadToken() -> bool;
-
-  auto sendAndParse(std::string const&) -> void;
-};
 
 /**
  * @brief Provides access token for SketchFab API access
  * @pre RestClient has to be initialized
  */
-inline Auth::Auth(std::string_view username_, std::string_view password_)
+Auth::Auth(std::string_view username_, std::string_view password_)
     : username(Util::percentEncode(username_))
     , password(Util::percentEncode(password_))
     , auth_token(SketchFabAPI::auth_token)
@@ -61,7 +24,7 @@ inline Auth::Auth(std::string_view username_, std::string_view password_)
   authenticate();
 };
 
-inline auto Auth::authenticate() -> void
+auto Auth::authenticate() -> void
 {
   using namespace std::chrono;
   const bool loaded = loadToken();
@@ -77,33 +40,33 @@ inline auto Auth::authenticate() -> void
   storeToken();
 }
 
-inline auto Auth::authenticate(std::string_view username_, std::string_view password_) -> void
+auto Auth::authenticate(std::string_view username_, std::string_view password_) -> void
 {
   username = username_;
   password = password_;
   authenticate();
 }
 
-inline auto Auth::getAuthenticated() const -> bool
+auto Auth::getAuthenticated() const -> bool
 {
   return authenticated;
 }
 
-inline auto Auth::getAccessToken() const -> std::string_view
+auto Auth::getAccessToken() const -> std::string_view
 {
   if (!authenticated)
     throw std::runtime_error("Missing Username and Password");
   return std::string_view(access_token);
 };
 
-inline auto Auth::getToken() -> void
+auto Auth::getToken() -> void
 {
   const auto query =
       fmt::format("grant_type=password&client_id={}&username={}&password={}", auth_token, username, password);
   sendAndParse(query);
 }
 
-inline auto Auth::refreshToken() -> void
+auto Auth::refreshToken() -> void
 {
   const auto query = fmt::format(
       "grant_type=refresh_token&refresh_token={}&client_id={}&username={}&"
@@ -116,14 +79,14 @@ inline auto Auth::refreshToken() -> void
   sendAndParse(query);
 }
 
-inline auto Auth::storeToken() const -> void
+auto Auth::storeToken() const -> void
 {
   auto file = fmt::output_file("sketchfab.auth");
 
   file.print("{};{};{}", access_token, refresh_token, token_valid_until);
 }
 
-inline auto Auth::loadToken() -> bool
+auto Auth::loadToken() -> bool
 {
   std::ifstream file {"sketchfab.auth", std::ios::in};
   std::tm t {};
@@ -139,12 +102,12 @@ inline auto Auth::loadToken() -> bool
   return true;
 }
 
-inline auto Auth::sendAndParse(std::string const& query) -> void
+auto Auth::sendAndParse(std::string const& query) -> void
 {
   RestClient::Connection conn {SketchFabAPI::auth_base.data()};
   const auto response = conn.post(SketchFabAPI::auth_query.data(), query);
   if (response.code == 200) {
-    auto json_response = json::parse(response.body);
+    auto json_response = nlohmann::json::parse(response.body);
     access_token = json_response.at("access_token");
     refresh_token = json_response.at("refresh_token");
     const int expires_in = json_response.at("expires_in");
@@ -156,4 +119,5 @@ inline auto Auth::sendAndParse(std::string const& query) -> void
     throw authentication_error(fmt::format("Authentication Error:\tCode: {}\n{}\n", response.code, response.body));
   }
 }
+
 }  // namespace SketchFetch::Authentication

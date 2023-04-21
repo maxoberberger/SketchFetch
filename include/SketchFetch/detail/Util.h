@@ -7,10 +7,11 @@
 
 #include <fmt/core.h>
 #include <nlohmann/json.hpp>
-using json = nlohmann::json;
 
 namespace SketchFetch::Util
 {
+using json = nlohmann::json;
+
 auto static printResponse(json response) -> void
 {
   for (auto&& i : response["results"]) {
