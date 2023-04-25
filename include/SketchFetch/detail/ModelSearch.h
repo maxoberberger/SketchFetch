@@ -44,7 +44,7 @@ struct ModelSearchResult
 {
   friend class SketchFetch;
   std::string uri, uid, name, description, thumbnail;
-  std::size_t views, likes;
+  std::size_t views, likes, vertexCount, faceCount;
   bool isDownloadable;
 };
 

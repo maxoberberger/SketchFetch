@@ -87,6 +87,8 @@ auto SketchFetch::search(ModelSearchQuery const& query) const -> std::optional<s
                              .thumbnail = result["thumbnails"]["images"][0]["url"].get<std::string>(),
                              .views = result["viewCount"].get<std::size_t>(),
                              .likes = result["likeCount"].get<std::size_t>(),
+                             .vertexCount = result["vertexCount"].get<std::size_t>(),
+                             .faceCount = result["faceCount"].get<std::size_t>(),
                              .isDownloadable = result["isDownloadable"].get<bool>()});
     }
     return std::make_optional(model_search_results);
